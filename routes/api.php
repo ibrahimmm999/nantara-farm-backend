@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [UserController::class, 'login']);
 Route::post('register', [UserController::class, 'register']);
 
+Route::get('datacamera',[DataCameraController::class, 'all']);
+Route::post('datacamera',[DataCameraController::class, 'add']);
+Route::get('avg-weight-per-day',[DataCameraController::class, 'getAvgWeightPerDay']);
+Route::get('avg-weight-per-month',[DataCameraController::class, 'getAverageWeightPerMonth']);
+Route::get('avg-weight-per-specific-month',[DataCameraController::class, 'getAverageWeightForSpecificMonth']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // USER
@@ -27,9 +32,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('delete-user', [UserController::class, 'delete']);
     
     // DATA CAMERA
-    Route::get('datacamera',[DataCameraController::class, 'all']);
-    Route::post('datacamera',[DataCameraController::class, 'add']);
-    Route::get('avg-weight-per-day',[DataCameraController::class, 'getAvgWeightPerDay']);
-    Route::get('avg-weight-per-month',[DataCameraController::class, 'getAverageWeightPerMonth']);
-    Route::get('avg-weight-per-specific-month',[DataCameraController::class, 'getAverageWeightForSpecificMonth']);
 });
