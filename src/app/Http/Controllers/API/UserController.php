@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Helpers\ResponseFormatter;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
+
+class UserController extends Controller
+{
+    public function register(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => ['required', 'string'],
+                'email' => ['required', 'email:dns', 'string', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', Password::default()],
+            ]);
+
+            User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            return ResponseFormatter::success(
+                [
+                    'user' => $user
+                ],
+                'User Registered'
+            );
+        } catch (ValidationException $error) {
+            return ResponseFormatter::error(
+                [
+                    'message' => 'Something when wrong',
+                    'error' => array_values($error->errors())[0][0],
+                ],
+                'Register Failed',
+                500,
+            );
+        }
+    }
+
+    public function login(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required',
+                'password' => 'required',
+            ]);
+
+            // Cek apakah ada name dan password yang sesuai
+            $credentials = request(['name', 'password']);
+
+            if (!Auth::attempt($credentials)) {
+                return ResponseFormatter::error(
+                    [
+                        'message' => 'Unauthorized',
+                        'error' => 'Password incorrect'
+                    ],
+                    'Authentication Failed',
+                    500
+                );
+            }
+
+            $user = User::where('name', $request->name)->first();
+
+            // cek ulang apakah password sesuai (opsional)
+            if (!Hash::check($request->password, $user->password, [])) {
+                throw new \Exception('Invalid Credentials');
+            }
+
+            $tokenResult = $user->createToken('authToken')->plainTextToken;
+
+            return ResponseFormatter::success([
+                'acess_token' => $tokenResult,
+                'token_type' => 'Bearer',
+                'user' => $user
+            ], 'Authenticated');
+        } catch (ValidationException $error) {
+            return ResponseFormatter::error(
+                [
+                    'message' => 'Something when wrong',
+                    'error' => array_values($error->errors())[0][0],
+                ],
+                'Login Failed',
+                500,
+            );
+        }
+    }
+
+    public function get(Request $request)
+    {
+        $user = $request->user();
+        return ResponseFormatter::success($user, 'Get user data success');
+    }
+
+    public function all(request $request)
+    {
+        $user = User::all();
+        return ResponseFormatter::success($user, 'Get all user data success');
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+            $token = $request->user()->currentAccessToken()->delete();
+            return ResponseFormatter::success($token, 'Token Revoked');
+        } catch (ValidationException $error) {
+            return ResponseFormatter::error(
+                [
+                    'message' => 'Something when wrong',
+                    'error' => array_values($error->errors())[0][0],
+                ],
+                'Logout Failed',
+                500,
+            );
+        }
+    }
+
+    function delete(request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required',
+            ]);
+
+            $user = User::find($request->id);
+
+            if (!$user) {
+                return ResponseFormatter::error(
+                    [
+                        'message' => 'Something when wrong',
+                        'error' => "Data Not Found",
+                    ],
+                    'Delete Data user$user Failed',
+                    404,
+                );
+            }
+
+            $user->forceDelete();
+
+            return ResponseFormatter::success(
+                null,
+                'Delete Data user$user Successfully'
+            );
+        } catch (ValidationException $error) {
+            return ResponseFormatter::error(
+                [
+                    'message' => 'Something when wrong',
+                    'error' => array_values($error->errors())[0][0],
+                ],
+                'Delete Data user$user Failed',
+                400,
+            );
+        }
+    }
+
+}
