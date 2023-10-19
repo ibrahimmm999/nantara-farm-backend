@@ -21,6 +21,7 @@ Route::post('register', [UserController::class, 'register']);
 Route::get('datacamera',[DataCameraController::class, 'all']);
 Route::post('datacamera',[DataCameraController::class, 'add']);
 Route::get('avg-weight-per-day',[DataCameraController::class, 'getAvgWeightPerDay']);
+Route::get('avg-weight-today',[DataCameraController::class, 'getAverageWeightToday']);
 Route::get('avg-weight-per-month',[DataCameraController::class, 'getAverageWeightPerMonth']);
 Route::get('avg-weight-per-specific-month',[DataCameraController::class, 'getAverageWeightForSpecificMonth']);
 

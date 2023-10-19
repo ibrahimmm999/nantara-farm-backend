@@ -7,6 +7,7 @@ use App\Helpers\ResponseFormatter;
 use App\Models\DataCamera;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class DataCameraController extends Controller
@@ -78,6 +79,19 @@ class DataCameraController extends Controller
             ];
         }
         return ResponseFormatter::success($result, 'Get Data Per Month success');
+
+    }
+
+    public function getAverageWeightToday()
+    {
+        $today = Carbon::today()->toDateString();
+
+        $averageWeightToday = DB::table('data_cameras')
+            ->select(DB::raw('AVG(weight) as average_weight'))
+            ->whereDate('created_at', $today)
+            ->first();
+
+        return ResponseFormatter::success($averageWeightToday, 'Get Data Today success');
 
     }
 
